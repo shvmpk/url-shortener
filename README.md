@@ -2,8 +2,6 @@
 
 An advanced, production-grade URL shortening service built for internet-scale systems. Designed with scalability, observability, and extensibility in mind — yet still under active development with new features being added regularly.
 
-> ⚠️ **Note:** This project is still in development. More features and improvements are being added continuously. Stay tuned!
-
 ---
 
 ## 📌 What is a URL Shortener?
