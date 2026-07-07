@@ -1,0 +1,105 @@
+# Contains our applications
+# - API Gateway
+# - Shortener Service
+# - Redirect Service
+# - Analytics Service
+#
+# Services can run in Docker (via Dockerfiles) or locally on the host via gradle bootRun.
+# For local development, comment out the service blocks below and run each service
+# from its own terminal using `./gradlew bootRun`.
+
+name: url-shortener
+
+services:
+  shortener-service:
+    build:
+      context: ../shortener-service
+    container_name: shortener-service
+    mem_limit: 512m
+    mem_reservation: 256m
+    cpus: "0.5"
+    ports:
+      - "8081:8081"
+    environment:
+      APP_BASE_URL: http://localhost:8080
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/url_shortener?currentSchema=short_url
+      DB_USERNAME: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: "6379"
+      KAFKA_BOOTSTRAP: kafka:9092
+    depends_on:
+      - postgres
+      - redis
+      - kafka
+    restart: unless-stopped
+
+  redirect-service:
+    build:
+      context: ../redirect-service
+    container_name: redirect-service
+    mem_limit: 512m
+    mem_reservation: 256m
+    cpus: "0.5"
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/url_shortener?currentSchema=short_url
+      DB_USERNAME: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: "6379"
+      KAFKA_BOOTSTRAP: kafka:9092
+      COOKIE_ENCRYPTION_PASSWORD: ${COOKIE_ENCRYPTION_PASSWORD:-changeit}
+      COOKIE_ENCRYPTION_SALT: ${COOKIE_ENCRYPTION_SALT:-deadbeef}
+    depends_on:
+      - postgres
+      - redis
+      - kafka
+    restart: unless-stopped
+
+  analytics-service:
+    build:
+      context: ../analytics-service
+    container_name: analytics-service
+    mem_limit: 512m
+    mem_reservation: 256m
+    cpus: "0.5"
+    ports:
+      - "8083:8083"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/url_shortener?currentSchema=analytics
+      DB_USERNAME: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      KAFKA_BOOTSTRAP: kafka:9092
+      GEOIP_CITY_DB_PATH: ${GEOIP_CITY_DB_PATH:-classpath:geoip/GeoLite2-City.mmdb}
+      GEOIP_ASN_DB_PATH: ${GEOIP_ASN_DB_PATH:-classpath:geoip/GeoLite2-ASN.mmdb}
+    # To mount GeoIP databases from the host (e.g., for updates without rebuild):
+    # volumes:
+    #   - /path/to/GeoLite2-City.mmdb:/app/geoip/GeoLite2-City.mmdb
+    #   - /path/to/GeoLite2-ASN.mmdb:/app/geoip/GeoLite2-ASN.mmdb
+    # Then set GEOIP_CITY_DB_PATH=file:/app/geoip/GeoLite2-City.mmdb
+    # And set GEOIP_ASN_DB_PATH=file:/app/geoip/GeoLite2-ASN.mmdb
+    depends_on:
+      - postgres
+      - kafka
+    restart: unless-stopped
+
+  api-gateway:
+    build:
+      context: ../api-gateway
+    container_name: api-gateway
+    mem_limit: 512m
+    mem_reservation: 256m
+    cpus: "0.5"
+    ports:
+      - "8080:8080"
+    environment:
+      SHORTENER_SERVICE_URL: http://shortener-service:8081
+      REDIRECT_SERVICE_URL: http://redirect-service:8082
+      ANALYTICS_SERVICE_URL: http://analytics-service:8083
+    depends_on:
+      - shortener-service
+      - redirect-service
+      - analytics-service
+    restart: unless-stopped

@@ -1,0 +1,112 @@
+app:
+  base-url: ${APP_BASE_URL:http://localhost:8082}
+
+logging:
+  structured:
+    format: logstash
+
+spring:
+  application:
+    name: redirect-service
+  webflux:
+    cors:
+      allowed-origins: ${CORS_ALLOWED_ORIGINS:*}
+  datasource:
+    url: jdbc:postgresql://localhost:5432/url_shortener?currentSchema=short_url
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+    hikari:
+      maximum-pool-size: 50
+      minimum-idle: 10
+      connection-timeout: 5000
+      idle-timeout: 300000
+      max-lifetime: 600000
+      pool-name: HikariPool
+      metrics-name: HikariPool
+  jpa:
+    hibernate:
+      ddl-auto: none
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      lettuce:
+        metrics:
+          enabled: true
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP:localhost:9092}
+    producer:
+      acks: all
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.type.mapping: analyticsEvent:com.shvmpk.redirect_service.dto.AnalyticsEvent
+        enable.idempotence: true
+        retries: 2147483647
+        delivery.timeout.ms: 120000
+  thymeleaf:
+    prefix: classpath:/templates/
+    suffix: .html
+    mode: HTML
+    cache: true
+management:
+  endpoints:
+    web:
+      base-path: /api/v1/actuator
+      exposure:
+        include: health,info,prometheus
+    health:
+      probes:
+        enabled: true
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
+
+otel:
+  exporter:
+    otlp:
+      endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://localhost:4317}
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10s
+        permitted-number-of-calls-in-half-open-state: 3
+  retry:
+    configs:
+      default:
+        max-retry-attempts: 3
+        wait-duration: 500ms
+        retry-exceptions:
+          - org.springframework.dao.DataAccessException
+          - java.io.IOException
+    instances:
+      kafka-producer:
+        base-config: default
+        max-retry-attempts: 3
+        wait-duration: 1s
+      redis-cache:
+        base-config: default
+        max-retry-attempts: 2
+        wait-duration: 200ms
+
+server:
+  port: 8082
+
+security:
+  cookie-encryption:
+    keys:
+      - password: ${COOKIE_ENCRYPTION_PASSWORD:changeit}
+        salt: ${COOKIE_ENCRYPTION_SALT:deadbeef}

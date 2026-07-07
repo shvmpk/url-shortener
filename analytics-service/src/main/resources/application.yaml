@@ -1,0 +1,97 @@
+app:
+  base-url: ${APP_BASE_URL:http://localhost:8083}
+
+logging:
+  structured:
+    format: logstash
+
+spring:
+  application:
+    name: analytics-service
+  webflux:
+    cors:
+      allowed-origins: ${CORS_ALLOWED_ORIGINS:*}
+  datasource:
+    url: jdbc:postgresql://localhost:5432/url_shortener?currentSchema=analytics
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+    hikari:
+      maximum-pool-size: 50
+      minimum-idle: 10
+      connection-timeout: 5000
+      idle-timeout: 300000
+      max-lifetime: 600000
+      pool-name: HikariPool
+      metrics-name: HikariPool
+  jpa:
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate.jdbc.batch_size: 50
+      hibernate.order_inserts: true
+      hibernate.order_updates: true
+  flyway:
+    schemas: analytics
+    locations: classpath:db/migration/analytics
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP:localhost:9092}
+    consumer:
+      group-id: analytics-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.value.default.type: com.shvmpk.analytics_service.dto.AnalyticsEvent
+        spring.json.trusted.packages: com.shvmpk.analytics_service.dto
+        spring.json.use.type.headers: false
+        max.poll.interval.ms: 300000
+        max.poll.records: 500
+    listener:
+      type: batch
+      concurrency: 3
+management:
+  endpoints:
+    web:
+      base-path: /api/v1/actuator
+      exposure:
+        include: health,info,prometheus
+    health:
+      probes:
+        enabled: true
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
+
+otel:
+  exporter:
+    otlp:
+      endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://localhost:4317}
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10s
+        permitted-number-of-calls-in-half-open-state: 3
+    instances:
+      analytics-geoip:
+        base-config: default
+
+server:
+  port: 8083
+
+geoip:
+  database:
+    city-path: ${GEOIP_CITY_DB_PATH:classpath:geoip/GeoLite2-City.mmdb}
+    asn-path: ${GEOIP_ASN_DB_PATH:classpath:geoip/GeoLite2-ASN.mmdb}

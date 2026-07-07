@@ -1,0 +1,94 @@
+# Contains observability tools
+# - Prometheus
+# - Grafana
+# - Jaeger
+# - Loki
+# - Alloy
+
+name: url-shortener
+
+services:
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    user: "0"
+
+    ports:
+      - "${PROMETHEUS_PORT}:9090"
+
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+
+    tmpfs:
+      - /prometheus
+
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:12.0
+    container_name: grafana
+
+    ports:
+      - "${GRAFANA_PORT}:3000"
+
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD}
+      GF_INSTALL_PLUGINS: "grafana-piechart-panel"
+
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+
+    tmpfs:
+      - /var/lib/grafana
+
+    restart: unless-stopped
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: jaeger
+
+    ports:
+      - "${JAEGER_UI_PORT}:16686"
+      - "4317:4317"
+      - "4318:4318"
+
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+
+    restart: unless-stopped
+
+  loki:
+    image: grafana/loki:3.6.11
+    container_name: loki
+
+    ports:
+      - "${LOKI_PORT}:3100"
+
+    volumes:
+      - ./loki/loki.yml:/etc/loki/loki.yml:ro
+
+    tmpfs:
+      - /tmp/loki
+
+    command: -config.file=/etc/loki/loki.yml
+
+    restart: unless-stopped
+
+  alloy:
+    image: grafana/alloy:latest
+    container_name: alloy
+
+    ports:
+      - "12345:12345"
+
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./alloy/alloy.river:/etc/alloy/alloy.river:ro
+
+    command: run --server.http.listen-addr=0.0.0.0:12345 /etc/alloy/alloy.river
+
+    restart: unless-stopped
+
+    depends_on:
+      - loki
