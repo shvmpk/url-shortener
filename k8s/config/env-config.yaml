@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: env-config
+  namespace: url-shortener
+data:
+  APP_BASE_URL: "http://localhost:8080"
+
+  SPRING_DATASOURCE_SHORTENER_URL: "jdbc:postgresql://postgres:5432/url_shortener?currentSchema=short_url"
+  SPRING_DATASOURCE_ANALYTICS_URL: "jdbc:postgresql://postgres:5432/url_shortener?currentSchema=analytics"
+
+  SPRING_DATA_REDIS_HOST: "redis"
+  SPRING_DATA_REDIS_PORT: "6379"
+
+  KAFKA_BOOTSTRAP: "kafka:9092"
+
+  OTEL_EXPORTER_OTLP_ENDPOINT: "http://jaeger:4317"
+
+  CORS_ALLOWED_ORIGINS: "*"
+
+  GEOIP_CITY_DB_PATH: "classpath:geoip/GeoLite2-City.mmdb"
+  GEOIP_ASN_DB_PATH: "classpath:geoip/GeoLite2-ASN.mmdb"

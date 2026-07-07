@@ -1,0 +1,84 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '4.1.0'
+    id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'com.shvmpk'
+version = '0.0.1-SNAPSHOT'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(26)
+    }
+}
+
+ext['flyway.version'] = '12.10.0'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // Web-MVC
+    implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+    testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
+
+    // Spring Data JPA
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'
+
+    // Kafka (analytics event consumption)
+    implementation 'org.springframework.boot:spring-boot-starter-kafka'
+    testImplementation 'org.springframework.boot:spring-boot-starter-kafka-test'
+
+    // Flyway Migration
+    implementation 'org.springframework.boot:spring-boot-starter-flyway'
+    testImplementation 'org.springframework.boot:spring-boot-starter-flyway-test'
+
+    // MaxMind GeoIP2 (IP geolocation)
+    implementation("com.maxmind.geoip2:geoip2:4.2.0")
+
+    // Circuit Breaker
+    implementation 'io.github.resilience4j:resilience4j-spring-boot3:2.2.0'
+
+    // Actuator
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    testImplementation 'org.springframework.boot:spring-boot-starter-actuator-test'
+
+    // Open Telemetry
+    implementation 'org.springframework.boot:spring-boot-starter-opentelemetry'
+    testImplementation 'org.springframework.boot:spring-boot-starter-opentelemetry-test'
+
+    // Prometheus
+    runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
+
+    // Spring Dev Tools
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
+    // Lombok
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+    testCompileOnly 'org.projectlombok:lombok'
+    testAnnotationProcessor 'org.projectlombok:lombok'
+
+    // PostgresSQL
+    runtimeOnly 'org.postgresql:postgresql'
+
+    // Flyway PostgreSQL database module (separate artifact in Flyway 10+)
+    runtimeOnly "org.flywaydb:flyway-database-postgresql:${property('flyway.version')}"
+
+    // OpenAPI Swagger
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.3'
+
+    // Structured JSON logging
+    implementation("net.logstash.logback:logstash-logback-encoder:9.0")
+
+    // Junit
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}

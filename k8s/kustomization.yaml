@@ -1,0 +1,41 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: url-shortener
+
+resources:
+  - namespace.yaml
+  - config/env-config.yaml
+  - config/env-secret.yaml
+  - infrastructure/postgres-pvc.yaml
+  - infrastructure/postgres-statefulset.yaml
+  - infrastructure/postgres-service.yaml
+  - infrastructure/redis-statefulset.yaml
+  - infrastructure/redis-service.yaml
+  - infrastructure/kafka-statefulset.yaml
+  - infrastructure/kafka-service.yaml
+  - apps/shortener-deployment.yaml
+  - apps/shortener-service.yaml
+  - apps/redirect-deployment.yaml
+  - apps/redirect-service.yaml
+  - apps/analytics-deployment.yaml
+  - apps/analytics-service.yaml
+  - apps/gateway-deployment.yaml
+  - apps/gateway-service.yaml
+  - apps/ingress.yaml
+  - apps/shortener-pdb.yaml
+  - apps/redirect-pdb.yaml
+  - apps/gateway-pdb.yaml
+  - monitoring/prometheus-config.yaml
+  - monitoring/prometheus-deployment.yaml
+  - monitoring/prometheus-service.yaml
+  - monitoring/grafana-config.yaml
+  - monitoring/grafana-deployment.yaml
+  - monitoring/grafana-service.yaml
+  - monitoring/jaeger-deployment.yaml
+  - monitoring/jaeger-service.yaml
+  - monitoring/loki-config.yaml
+  - monitoring/loki-deployment.yaml
+  - monitoring/loki-service.yaml
+  - monitoring/alloy-config.yaml
+  - monitoring/alloy-daemonset.yaml

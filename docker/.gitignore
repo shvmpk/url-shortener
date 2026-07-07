@@ -1,0 +1,3 @@
+# Local environment variables — contains development-only credentials
+# For production, use a secrets manager or CI/CD pipeline secrets
+.env

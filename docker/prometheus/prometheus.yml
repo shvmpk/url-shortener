@@ -1,0 +1,47 @@
+# -----------------------------------------------------------------------------
+# Prometheus Configuration (Development)
+#
+# Scrapes metrics from all Spring Boot microservices running locally.
+#
+# Assumptions:
+# - Prometheus runs inside Docker.
+# - Spring Boot services run on the host machine (IntelliJ/IDE).
+# - Metrics are exposed via Spring Boot Actuator + Micrometer.
+#
+# When services are containerized or deployed to Kubernetes, replace the
+# static targets with Docker service names or Kubernetes service discovery.
+# -----------------------------------------------------------------------------
+
+global:
+  scrape_interval: 5s
+
+scrape_configs:
+
+  - job_name: prometheus
+    static_configs:
+      - targets:
+          - localhost:9090
+
+  - job_name: api-gateway
+    metrics_path: /api/v1/actuator/prometheus
+    static_configs:
+      - targets:
+          - api-gateway:8080
+
+  - job_name: shortener-service
+    metrics_path: /api/v1/actuator/prometheus
+    static_configs:
+      - targets:
+          - shortener-service:8081
+
+  - job_name: redirect-service
+    metrics_path: /api/v1/actuator/prometheus
+    static_configs:
+      - targets:
+          - redirect-service:8082
+
+  - job_name: analytics-service
+    metrics_path: /api/v1/actuator/prometheus
+    static_configs:
+      - targets:
+          - analytics-service:8083
