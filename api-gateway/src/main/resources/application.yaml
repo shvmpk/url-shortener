@@ -8,9 +8,6 @@ logging:
 spring:
   application:
     name: api-gateway
-  webflux:
-    cors:
-      allowed-origins: ${CORS_ALLOWED_ORIGINS:*}
   data:
     redis:
       host: ${REDIS_HOST:localhost}
@@ -24,102 +21,10 @@ spring:
           enabled: true
   cloud:
     gateway:
-      server:
-        webflux:
-          default-filters:
-            - name: DedupeResponseHeader
-              args:
-                name: Access-Control-Allow-Origin
-          routes:
-          # Shortener Service — URL management API
-          - id: shortener-service
-            order: 0
-            enabled: true
-            uri: ${SHORTENER_SERVICE_URL:http://localhost:8081}
-            predicates:
-              - Path=/api/v1/urls/**
-            filters:
-              - name: CircuitBreaker
-                args:
-                  name: shortenerCircuitBreaker
-                  fallbackUri: forward:/fallback/shortener
-              - name: RateLimiting
-                args:
-                  capacity: 1000
-                  refillTokens: 500
-                  refillPeriodMinutes: 1
-
-          # Shortener Service — QR code generation
-          - id: shortener-service-qr
-            order: 1
-            enabled: true
-            uri: ${SHORTENER_SERVICE_URL:http://localhost:8081}
-            predicates:
-              - Path=/api/v1/qr/**
-            filters:
-              - name: CircuitBreaker
-                args:
-                  name: shortenerCircuitBreaker
-                  fallbackUri: forward:/fallback/shortener
-              - name: RateLimiting
-                args:
-                  capacity: 500
-                  refillTokens: 200
-                  refillPeriodMinutes: 1
-
-          # Analytics Service — analytics query API
-          - id: analytics-service
-            order: 2
-            enabled: true
-            uri: ${ANALYTICS_SERVICE_URL:http://localhost:8083}
-            predicates:
-              - Path=/api/v1/analytics/**
-            filters:
-              - name: CircuitBreaker
-                args:
-                  name: analyticsCircuitBreaker
-                  fallbackUri: forward:/fallback/analytics
-              - name: RateLimiting
-                args:
-                  capacity: 500
-                  refillTokens: 200
-                  refillPeriodMinutes: 1
-
-          # Redirect Service — password verification endpoint
-          - id: redirect-service-verify
-            order: 3
-            enabled: true
-            uri: ${REDIRECT_SERVICE_URL:http://localhost:8082}
-            predicates:
-              - Path=/{segment}/verify
-            filters:
-              - name: CircuitBreaker
-                args:
-                  name: redirectCircuitBreaker
-                  fallbackUri: forward:/fallback/redirect
-              - name: RateLimiting
-                args:
-                  capacity: 2000
-                  refillTokens: 1000
-                  refillPeriodMinutes: 1
-
-          # Redirect Service — main redirect endpoint (catch-all for single segments)
-          - id: redirect-service-redirect
-            order: 4
-            enabled: true
-            uri: ${REDIRECT_SERVICE_URL:http://localhost:8082}
-            predicates:
-              - Path=/{segment}
-            filters:
-              - name: CircuitBreaker
-                args:
-                  name: redirectCircuitBreaker
-                  fallbackUri: forward:/fallback/redirect
-              - name: RateLimiting
-                args:
-                  capacity: 100000
-                  refillTokens: 50000
-                  refillPeriodMinutes: 1
+      default-filters:
+        - name: DedupeResponseHeader
+          args:
+            name: Access-Control-Allow-Origin
 
 management:
   endpoints:
